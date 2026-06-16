@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevQuiz — Test your code. Level up your mind.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep: #0a0a12;
+      --bg-mid: #12121f;
+      --electric-blue: #00d4ff;
+      --electric-purple: #a855f7;
+      --electric-pink: #ec4899;
+      --glass-bg: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-primary: #f0f0f5;
+      --text-muted: #9494a8;
+      --correct: #22c55e;
+      --wrong: #ef4444;
+      --radius: 16px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0, 212, 255, 0.15), transparent),
+        radial-gradient(ellipse 70% 50% at 80% 80%, rgba(168, 85, 247, 0.18), transparent),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(236, 72, 153, 0.06), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem calc(1.25rem + var(--safe-bottom));
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(-30px); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .question-card.animating-out { animation: slideOut 0.25s ease forwards; }
+    .question-card.animating-in { animation: slideIn 0.35s ease forwards; }
+
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+    }
+
+    /* ── Home ── */
+    .home {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 2rem;
+      padding: 2rem 0;
+    }
+
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--electric-blue), var(--electric-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+    }
+
+    .app-title {
+      font-size: clamp(2.5rem, 10vw, 3.25rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--electric-blue), var(--electric-purple), var(--electric-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    .tagline {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 280px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      min-height: 52px;
+      padding: 0.875rem 1.75rem;
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--electric-blue), var(--electric-purple));
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(0, 212, 255, 0.25);
+    }
+
+    .btn-primary:hover { box-shadow: 0 6px 32px rgba(0, 212, 255, 0.4); }
+
+    .btn-secondary {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover { border-color: rgba(0, 212, 255, 0.4); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--electric-purple);
+      color: var(--electric-purple);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Setup ── */
+    .setup { gap: 1.25rem; }
+
+    .screen-header {
+      text-align: center;
+      padding-top: 0.5rem;
+    }
+
+    .screen-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .screen-header p { color: var(--text-muted); font-size: 0.9rem; }
+
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.625rem;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.625rem;
+    }
+
+    .option-btn {
+      min-height: 56px;
+      padding: 0.75rem 0.625rem;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      word-break: break-word;
+    }
+
+    .option-btn:hover { border-color: rgba(0, 212, 255, 0.35); }
+
+    .option-btn.selected {
+      border-color: var(--electric-blue);
+      background: rgba(0, 212, 255, 0.12);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+    }
+
+    .setup-actions { margin-top: auto; padding-top: 1rem; display: flex; flex-direction: column; gap: 0.625rem; }
+
+    /* ── Quiz ── */
+    .quiz { gap: 1rem; }
+
+    .quiz-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .quiz-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timer-ring {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+
+    .timer-ring svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .timer-ring circle {
+      fill: none;
+      stroke-width: 3;
+    }
+
+    .timer-bg { stroke: rgba(255, 255, 255, 0.1); }
+    .timer-fill {
+      stroke: var(--electric-blue);
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.3s linear, stroke 0.3s;
+    }
+
+    .timer-fill.warning { stroke: #f59e0b; }
+    .timer-fill.danger { stroke: var(--wrong); }
+
+    .timer-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .progress-wrap { width: 100%; }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.375rem;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--electric-blue), var(--electric-purple));
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .question-card {
+      padding: 1.25rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-height: 0;
+    }
+
+    .question-text {
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .question-text code {
+      font-family: 'Space Grotesk', monospace;
+      background: rgba(0, 212, 255, 0.1);
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+      font-size: 0.95em;
+      word-break: break-all;
+    }
+
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+    }
+
+    .answer-btn {
+      min-height: 52px;
+      padding: 0.875rem 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      word-break: break-word;
+      line-height: 1.35;
+    }
+
+    .answer-btn:hover:not(:disabled) { border-color: rgba(168, 85, 247, 0.4); }
+
+    .answer-btn.correct {
+      border-color: var(--correct);
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--correct);
+    }
+
+    .answer-btn.wrong {
+      border-color: var(--wrong);
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--wrong);
+    }
+
+    .answer-btn.reveal-correct {
+      border-color: var(--correct);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .answer-btn:disabled { cursor: default; }
+
+    .feedback {
+      padding: 0.875rem 1rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .feedback.correct-fb {
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: var(--correct);
+    }
+
+    .feedback.wrong-fb {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--wrong);
+    }
+
+    .feedback.timeout-fb {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #f59e0b;
+    }
+
+    /* ── Results ── */
+    .results {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 1.25rem;
+    }
+
+    .results-card {
+      padding: 2rem 1.5rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .score-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(168, 85, 247, 0.15));
+      border: 2px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 40px rgba(168, 85, 247, 0.2);
+    }
+
+    .score-number {
+      font-size: 2.25rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--electric-blue), var(--electric-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .score-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    .perf-message {
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    .time-taken {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .results-actions {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(1.5rem + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: rgba(34, 197, 94, 0.95);
+      color: #fff;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      z-index: 100;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 375px) {
+      .app { padding: 1rem 0.875rem calc(1rem + var(--safe-bottom)); }
+      .option-grid { gap: 0.5rem; }
+      .option-btn { font-size: 0.8125rem; min-height: 52px; }
+      .question-text { font-size: 1rem; }
+      .answer-btn { min-height: 48px; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Home -->
+    <section id="screen-home" class="screen home active">
+      <div class="logo-wrap">
+        <div class="logo-icon">&lt;/&gt;</div>
+        <h1 class="app-title">DevQuiz</h1>
+        <p class="tagline">Test your code. Level up your mind.</p>
+      </div>
+      <button class="btn btn-primary" id="btn-start" style="max-width: 280px;">Start Quiz</button>
+    </section>
+
+    <!-- Setup -->
+    <section id="screen-setup" class="screen setup">
+      <div class="screen-header">
+        <h2>Choose Your Challenge</h2>
+        <p>Pick a language and difficulty level</p>
+      </div>
+      <div>
+        <p class="section-label">Language</p>
+        <div class="option-grid" id="lang-options">
+          <button class="option-btn" data-lang="javascript">JavaScript</button>
+          <button class="option-btn" data-lang="python">Python</button>
+          <button class="option-btn" data-lang="htmlcss">HTML/CSS</button>
+          <button class="option-btn" data-lang="general">General CS</button>
+        </div>
+      </div>
+      <div>
+        <p class="section-label">Difficulty</p>
+        <div class="option-grid" id="diff-options">
+          <button class="option-btn" data-diff="beginner">Beginner</button>
+          <button class="option-btn" data-diff="intermediate">Intermediate</button>
+          <button class="option-btn" data-diff="advanced">Advanced</button>
+        </div>
+      </div>
+      <div class="setup-actions">
+        <button class="btn btn-primary" id="btn-begin" disabled>Begin Quiz</button>
+        <button class="btn btn-secondary" id="btn-back-home">Back</button>
+      </div>
+    </section>
+
+    <!-- Quiz -->
+    <section id="screen-quiz" class="screen quiz">
+      <div class="quiz-top">
+        <span class="quiz-meta" id="quiz-meta"></span>
+        <div class="timer-ring">
+          <svg viewBox="0 0 52 52">
+            <circle class="timer-bg" cx="26" cy="26" r="22"></circle>
+            <circle class="timer-fill" id="timer-circle" cx="26" cy="26" r="22"
+              stroke-dasharray="138.23" stroke-dashoffset="0"></circle>
+          </svg>
+          <span class="timer-text" id="timer-text">20</span>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>Progress</span>
+          <span id="progress-label">1 / 10</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width: 10%"></div>
+        </div>
+      </div>
+      <div class="question-card glass" id="question-card">
+        <p class="question-text" id="question-text"></p>
+        <div class="answers" id="answers"></div>
+        <div class="feedback" id="feedback" style="display:none;"></div>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="screen-results" class="screen results">
+      <div class="results-card glass">
+        <div class="score-circle">
+          <span class="score-number" id="final-score">0/10</span>
+          <span class="score-label">Score</span>
+        </div>
+        <p class="perf-message" id="perf-message"></p>
+        <p class="time-taken" id="time-taken"></p>
+      </div>
+      <div class="results-actions">
+        <button class="btn btn-primary" id="btn-retry">Retry</button>
+        <button class="btn btn-outline" id="btn-share">Share Score</button>
+        <button class="btn btn-secondary" id="btn-home">Back to Home</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast">Score copied to clipboard!</div>
+
+  <script>
+    // ─── Question Bank (50+ per category) ───
+    const QUESTION_BANK = {
+      javascript: [
+        { difficulty: 'beginner', q: 'What keyword declares a block-scoped variable in JavaScript?', options: ['var', 'let', 'function', 'define'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which method adds an element to the end of an array?', options: ['push()', 'pop()', 'shift()', 'unshift()'], answer: 0 },
+        { difficulty: 'beginner', q: 'What does <code>typeof null</code> return?', options: ['"null"', '"object"', '"undefined"', '"boolean"'], answer: 1 },
+        { difficulty: 'beginner', q: 'How do you write a single-line comment in JavaScript?', options: ['// comment', '# comment', '/* comment', '-- comment'], answer: 0 },
+        { difficulty: 'beginner', q: 'Which operator checks both value and type equality?', options: ['==', '===', '=', '!='], answer: 1 },
+        { difficulty: 'beginner', q: 'What is the result of <code>2 + "2"</code>?', options: ['4', '"22"', 'NaN', 'Error'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which built-in object parses a JSON string?', options: ['JSON.parse()', 'JSON.stringify()', 'Object.parse()', 'String.toJSON()'], answer: 0 },
+        { difficulty: 'beginner', q: 'What does <code>console.log()</code> do?', options: ['Shows an alert', 'Outputs to the console', 'Writes to a file', 'Stops execution'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which symbol is used for template literals?', options: ['Single quotes', 'Double quotes', 'Backticks', 'Parentheses'], answer: 2 },
+        { difficulty: 'beginner', q: 'What is an array index of the first element?', options: ['1', '0', '-1', 'undefined'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which method removes the last element from an array?', options: ['push()', 'pop()', 'slice()', 'splice()'], answer: 1 },
+        { difficulty: 'beginner', q: 'What keyword creates a constant binding?', options: ['let', 'var', 'const', 'static'], answer: 2 },
+        { difficulty: 'beginner', q: 'Which value is falsy in JavaScript?', options: ['[]', '{}', '0', '"0"'], answer: 2 },
+        { difficulty: 'beginner', q: 'What does the <code>length</code> property of a string return?', options: ['Byte size', 'Number of characters', 'Word count', 'Line count'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which method converts a string to uppercase?', options: ['toUpperCase()', 'upper()', 'capitalize()', 'toCaps()'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is the DOM?', options: ['A database', 'Document Object Model', 'Data Object Manager', 'Dynamic Output Module'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which event fires when a user clicks an element?', options: ['hover', 'click', 'focus', 'load'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does <code>NaN</code> stand for?', options: ['Not a Node', 'Not a Number', 'Null and Nil', 'New and Null'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does a closure capture?', options: ['Only global variables', 'Its lexical environment', 'Only parameters', 'DOM nodes only'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is the output of <code>[1,2,3].map(x => x * 2)</code>?', options: ['[1,2,3]', '[2,4,6]', '[1,4,9]', '6'], answer: 1 },
+        { difficulty: 'intermediate', q: 'Which array method returns a new filtered array?', options: ['forEach()', 'filter()', 'map()', 'reduce()'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>Promise.all()</code> do?', options: ['Runs promises sequentially', 'Waits for all to resolve/reject', 'Cancels all promises', 'Retries failed promises'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is hoisting in JavaScript?', options: ['Moving code to a CDN', 'Moving declarations to top of scope', 'Lifting DOM elements', 'Compressing variables'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does the spread operator <code>...</code> do with arrays?', options: ['Deletes elements', 'Expands into individual elements', 'Sorts elements', 'Clones deeply always'], answer: 1 },
+        { difficulty: 'intermediate', q: 'Which method creates a shallow copy of an array?', options: ['copy()', 'slice()', 'splice()', 'concat() only'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is event bubbling?', options: ['Events firing twice', 'Events propagate from child to parent', 'Events are cancelled', 'Events run in parallel'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>async/await</code> simplify?', options: ['DOM manipulation', 'Working with Promises', 'Memory management', 'CSS animations'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is the <code>this</code> keyword in an arrow function?', options: ['Always window', 'Lexically bound from enclosing scope', 'Always undefined', 'The function itself'], answer: 1 },
+        { difficulty: 'intermediate', q: 'Which method serializes an object to JSON?', options: ['JSON.parse()', 'JSON.stringify()', 'Object.toJSON()', 'serialize()'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>Object.keys()</code> return?', options: ['Values only', 'An array of property names', 'Key-value pairs', 'Prototype chain'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is destructuring used for?', options: ['Deleting objects', 'Extracting values from arrays/objects', 'Freezing objects', 'Cloning prototypes'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>setTimeout(fn, 0)</code> do?', options: ['Runs immediately', 'Schedules fn after current call stack', 'Runs every 0ms forever', 'Throws an error'], answer: 1 },
+        { difficulty: 'intermediate', q: 'Which loop iterates over object enumerable properties?', options: ['for...of', 'for...in', 'while only', 'do...while only'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a higher-order function?', options: ['A function with high complexity', 'A function that takes/returns functions', 'A built-in only', 'An async function'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>Array.reduce()</code> do?', options: ['Filters items', 'Accumulates to a single value', 'Sorts items', 'Reverses array'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is the Temporal Dead Zone?', options: ['A browser bug', 'Period before let/const initialization', 'A memory leak', 'A deprecated API'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the output of <code>([] + {})</code>?', options: ['"[object Object]"', '"[object Array]"', 'NaN', 'undefined'], answer: 0 },
+        { difficulty: 'advanced', q: 'What does <code>Object.create(null)</code> produce?', options: ['An empty array', 'An object with no prototype', 'null', 'A frozen object'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a microtask in the event loop?', options: ['A setTimeout callback', 'A Promise callback', 'A requestAnimationFrame', 'A DOM event'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>Proxy</code> enable?', options: ['HTTP proxying', 'Intercepting object operations', 'Deep cloning only', 'Thread safety'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is currying?', options: ['Spicy coding', 'Transforming fn(a,b) into fn(a)(b)', 'Array flattening', 'Event delegation'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>WeakMap</code> use as keys?', options: ['Only strings', 'Objects only', 'Any primitive', 'Numbers only'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the difference between <code>call</code> and <code>apply</code>?', options: ['No difference', 'apply takes args as array', 'call is async', 'apply binds permanently'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is memoization?', options: ['Writing memos in code', 'Caching function results', 'Memory leak prevention', 'Garbage collection'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>Symbol.iterator</code> enable?', options: ['Unique IDs only', 'Custom iteration protocol', 'Async iteration only', 'JSON serialization'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the prototype chain?', options: ['A linked list of DOM nodes', 'Inheritance via __proto__ links', 'A Promise chain', 'Call stack'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>Object.freeze()</code> do?', options: ['Deletes object', 'Prevents adding/changing/deleting props', 'Deep freezes nested objects always', 'Makes object immutable in memory'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is debouncing?', options: ['Removing bugs', 'Delaying fn until pause in calls', 'Caching API responses', 'Batching DOM updates'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is throttling?', options: ['Slowing the CPU', 'Limiting fn execution rate', 'Blocking events', 'Reducing bundle size'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>Generator</code> function return?', options: ['A Promise', 'An iterator object', 'An array', 'undefined'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the module pattern used for?', options: ['CSS modules', 'Encapsulating private state', 'HTTP modules', 'Tree shaking only'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>structuredClone()</code> do?', options: ['Shallow copy only', 'Deep clone supported types', 'Clone DOM only', 'Serialize to JSON'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is tail call optimization?', options: ['Optimizing CSS', 'Reusing stack frame for tail calls', 'Removing recursion', 'Minifying tail code'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>Reflect</code> provide?', options: ['Mirror DOM API', 'Methods matching proxy traps', 'Reflection of types only', 'Runtime type checking'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the difference between <code>for...in</code> and <code>for...of</code>?', options: ['No difference', 'in iterates keys, of iterates values', 'of is deprecated', 'in is for arrays only'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which method finds an element in an array?', options: ['find()', 'search()', 'locate()', 'get()'], answer: 0 },
+        { difficulty: 'beginner', q: 'What symbol starts a multi-line comment?', options: ['//', '/*', '#', '--'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is optional chaining <code>?.</code> used for?', options: ['Required properties', 'Safe access on nullish values', 'Type coercion', 'Regex matching'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the event loop responsible for?', options: ['Looping arrays', 'Scheduling callbacks from queues', 'Parsing HTML', 'Compiling JS'], answer: 1 },
+      ],
+      python: [
+        { difficulty: 'beginner', q: 'Which keyword defines a function in Python?', options: ['function', 'def', 'func', 'define'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is the output of <code>print(3 // 2)</code>?', options: ['1.5', '1', '2', '1.0'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which data type is mutable in Python?', options: ['tuple', 'str', 'list', 'int'], answer: 2 },
+        { difficulty: 'beginner', q: 'How do you start a comment in Python?', options: ['//', '#', '/*', '--'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does <code>len()</code> return?', options: ['Last element', 'Length of a sequence', 'Memory size', 'Type name'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which operator is used for exponentiation?', options: ['^', '**', 'exp()', 'pow only'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is the correct way to create a list?', options: ['(1, 2, 3)', '[1, 2, 3]', '{1, 2, 3}', '<1, 2, 3>'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which function gets user input?', options: ['input()', 'read()', 'scan()', 'get()'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is <code>None</code> in Python?', options: ['Zero', 'Empty string', 'Null-like singleton', 'False'], answer: 2 },
+        { difficulty: 'beginner', q: 'Which keyword is used for loops over a sequence?', options: ['loop', 'for', 'foreach', 'repeat'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does <code>print(type(3.14))</code> show?', options: ['int', 'float', 'double', 'number'], answer: 1 },
+        { difficulty: 'beginner', q: 'How do you convert a string to integer?', options: ['int()', 'str()', 'integer()', 'parseInt()'], answer: 0 },
+        { difficulty: 'beginner', q: 'Which symbol indicates indentation block?', options: ['Braces {}', 'Indentation (spaces/tabs)', 'Semicolons', 'Parentheses'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is a tuple?', options: ['Mutable sequence', 'Immutable sequence', 'A dictionary', 'A set'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which method adds an item to a list?', options: ['add()', 'append()', 'push()', 'insert() only'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does <code>range(3)</code> produce?', options: ['[0,1,2]', '0,1,2 iterator', '[1,2,3]', '3 numbers'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which keyword exits a loop early?', options: ['exit', 'break', 'stop', 'return only'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is a dictionary keyed by?', options: ['Index numbers only', 'Hashable keys', 'Alphabetical order', 'Insertion order only in Py2'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a list comprehension?', options: ['A comment style', 'Concise way to create lists', 'A sorting algorithm', 'A file format'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>*args</code> capture?', options: ['Keyword arguments', 'Variable positional arguments', 'Global variables', 'Class attributes'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is the GIL?', options: ['Global Import Lock', 'Global Interpreter Lock', 'General IO Layer', 'Graph Iteration Loop'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>__init__</code> define?', options: ['Destructor', 'Constructor/initializer', 'Static method', 'Module entry'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a decorator?', options: ['A CSS class', 'Function wrapping another function', 'A data type', 'An import tool'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>with open()</code> ensure?', options: ['File encryption', 'Proper file closing', 'Parallel reads', 'Compression'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is duck typing?', options: ['Typing with ducks', 'Behavior over explicit type', 'Static typing', 'Type hints only'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>yield</code> create?', options: ['A thread', 'A generator', 'A list', 'A coroutine only in Py2'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is <code>__name__ == "__main__"</code> for?', options: ['Naming modules', 'Script entry point check', 'Class naming', 'Package init'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>enumerate()</code> provide?', options: ['Sorted items', 'Index-value pairs', 'Unique values', 'Filtered items'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a set in Python?', options: ['Ordered duplicates allowed', 'Unordered unique elements', 'Key-value store', 'Immutable list'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>lambda</code> create?', options: ['A class', 'An anonymous function', 'A module', 'A loop'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is slicing <code>[1:4]</code>?', options: ['Elements 1 through 3', 'Elements 1 through 4 inclusive', 'First 4 elements', 'Last 3 elements'], answer: 0 },
+        { difficulty: 'intermediate', q: 'What does <code>zip()</code> do?', options: ['Compresses files', 'Pairs iterables together', 'Sorts lists', 'Flattens nested lists'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is inheritance in OOP?', options: ['Copying files', 'Subclass acquiring parent behavior', 'Importing modules', 'Memory sharing'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>is</code> compare?', options: ['Values only', 'Object identity', 'String content only', 'Dictionary keys'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a virtual environment for?', options: ['VR development', 'Isolated Python dependencies', 'Cloud VMs', 'GUI rendering'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>try/except</code> handle?', options: ['Loops', 'Exceptions/errors', 'Imports', 'Threads'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a metaclass?', options: ['A fake class', 'Class of a class', 'Abstract base only', 'Module class'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>@staticmethod</code> mean?', options: ['Cannot be called', 'No implicit first argument', 'Must be overridden', 'Runs at import'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the MRO?', options: ['Memory Read Operation', 'Method Resolution Order', 'Module Runtime Object', 'Meta Return Order'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>async def</code> define?', options: ['A thread', 'A coroutine function', 'A generator only', 'A callback'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is <code>__slots__</code> used for?', options: ['Slot machine games', 'Restricting instance attributes', 'Memory mapping files', 'Thread slots'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a context manager protocol?', options: ['HTTP context', '__enter__ and __exit__', 'Import hooks', 'GC protocol'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>functools.lru_cache</code> do?', options: ['Clears cache', 'Memoizes function calls', 'LRU eviction of files', 'Caches imports'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is monkey patching?', options: ['Testing with monkeys', 'Runtime modification of classes/modules', 'A bug type', 'Patch management'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a descriptor in Python?', options: ['A docstring', 'Object defining __get__/__set__', 'A type hint', 'A file descriptor'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>asyncio</code> provide?', options: ['Sync IO', 'Async event loop framework', 'Thread pool only', 'Multiprocessing only'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the walrus operator <code>:=</code>?', options: ['Assignment expression', 'Comparison operator', 'Slice operator', 'Type annotation'], answer: 0 },
+        { difficulty: 'advanced', q: 'What is <code>__getitem__</code> for?', options: ['Item deletion', 'Subscript access (obj[key])', 'Item hashing', 'Item comparison'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>super()</code> do?', options: ['Creates superclass', 'Calls parent class methods', 'Checks superiority', 'Imports parent module'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a namespace package?', options: ['A folder name', 'Package spanning multiple directories', 'A global dict only', 'A virtual env'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the difference between <code>deepcopy</code> and assignment?', options: ['No difference', 'deepcopy creates independent nested copies', 'Assignment is slower', 'deepcopy is shallow'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>__repr__</code> aim to provide?', options: ['User-friendly print only', 'Unambiguous developer representation', 'JSON output', 'Memory address only'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a generator expression vs list comprehension?', options: ['Same thing', 'Generator is lazy/iterable', 'List is lazy', 'Generator uses more memory'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the purpose of <code>typing.Protocol</code>?', options: ['HTTP protocol', 'Structural subtyping', 'Type erasure', 'Runtime casting'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which keyword creates a conditional branch?', options: ['when', 'if', 'case', 'switch'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does <code>print("Hi" * 3)</code> output?', options: ['Hi3', 'HiHiHi', 'Error', 'Hi Hi Hi'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>**kwargs</code> capture?', options: ['Positional args', 'Keyword arguments as dict', 'Global kwargs', 'Class kwargs'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the LEGB rule?', options: ['Loop-Event-Global-Build', 'Local-Enclosing-Global-Builtin scope lookup', 'List-Enum-Get-Build', 'Load-Execute-Generate-Build'], answer: 1 },
+      ],
+      htmlcss: [
+        { difficulty: 'beginner', q: 'What does HTML stand for?', options: ['Hyper Text Markup Language', 'High Tech Modern Language', 'Hyper Transfer Mark Language', 'Home Tool Markup Language'], answer: 0 },
+        { difficulty: 'beginner', q: 'Which tag creates a hyperlink?', options: ['<link>', '<a>', '<href>', '<url>'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which tag is used for the largest heading?', options: ['<head>', '<h1>', '<header>', '<heading>'], answer: 1 },
+        { difficulty: 'beginner', q: 'What attribute provides alternative text for images?', options: ['src', 'alt', 'title', 'label'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which tag creates an unordered list?', options: ['<ol>', '<ul>', '<list>', '<li>'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does CSS stand for?', options: ['Creative Style Sheets', 'Cascading Style Sheets', 'Computer Style Syntax', 'Colorful Style System'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which property changes text color?', options: ['font-color', 'text-color', 'color', 'foreground'], answer: 2 },
+        { difficulty: 'beginner', q: 'Which HTML tag embeds an image?', options: ['<img>', '<image>', '<picture>', '<pic>'], answer: 0 },
+        { difficulty: 'beginner', q: 'What tag wraps the main visible content?', options: ['<head>', '<body>', '<main> only required', '<content>'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which CSS property sets background color?', options: ['bgcolor', 'background-color', 'color-background', 'bg-color'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which input type creates a checkbox?', options: ['type="check"', 'type="checkbox"', 'type="radio"', 'type="toggle"'], answer: 1 },
+        { difficulty: 'beginner', q: 'What tag defines a table row?', options: ['<td>', '<tr>', '<th>', '<row>'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which property controls font size?', options: ['text-size', 'font-size', 'size', 'font-height'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is the correct HTML document type declaration?', options: ['<doctype html>', '<!DOCTYPE html>', '<DOCTYPE HTML5>', '<html5>'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which tag creates a line break?', options: ['<break>', '<br>', '<lb>', '<newline>'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which CSS unit is relative to root font size?', options: ['px', 'em', 'rem', 'pt'], answer: 2 },
+        { difficulty: 'beginner', q: 'What attribute makes a link open in a new tab?', options: ['new="tab"', 'target="_blank"', 'open="new"', 'href="_blank"'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which tag is semantic for navigation?', options: ['<div class="nav">', '<nav>', '<navigation>', '<menu>'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>box-sizing: border-box</code> do?', options: ['Adds borders only', 'Width includes padding and border', 'Removes padding', 'Fixes margin collapse'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is Flexbox used for?', options: ['Grid layouts only', 'One-dimensional layout', 'Animations only', 'Typography only'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is CSS Grid primarily for?', options: ['Inline text', 'Two-dimensional layouts', 'Color gradients', 'Font loading'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does the <code>:hover</code> pseudo-class do?', options: ['Styles on focus', 'Styles when mouse over element', 'Styles on click only', 'Styles on load'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is specificity in CSS?', options: ['Font specificity', 'Rule priority calculation', 'Selector speed', 'Cache priority'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>position: absolute</code> do?', options: ['Stays in document flow', 'Removed from flow, positioned relative to ancestor', 'Fixed to viewport', 'Static placement'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a CSS media query used for?', options: ['Database queries', 'Responsive styles by conditions', 'JS events', 'HTML validation'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does the <code>z-index</code> property control?', options: ['Zoom level', 'Stacking order', 'Z-axis rotation', 'Opacity'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is the purpose of <code>meta viewport</code>?', options: ['SEO only', 'Mobile responsive scaling', 'Font loading', 'CSS variables'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>display: none</code> do?', options: ['Makes invisible but clickable', 'Removes from layout entirely', 'Hides with opacity', 'Collapses height only'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is margin collapse?', options: ['Deleting margins', 'Adjacent vertical margins combine', 'Border merging', 'Padding overlap'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What tag provides figure caption semantically?', options: ['<caption>', '<figcaption>', '<label>', '<desc>'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>object-fit: cover</code> do?', options: ['Stretches distorting', 'Crops to fill container', 'Centers without resize', 'Adds border'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a CSS custom property?', options: ['A JS variable', 'A variable defined with --name', 'A preprocessor variable only', 'An HTML attribute'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>aria-label</code> improve?', options: ['SEO ranking', 'Accessibility for assistive tech', 'CSS styling', 'Load performance'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is the difference between <code>em</code> and <code>rem</code>?', options: ['No difference', 'em relative to parent, rem to root', 'rem is deprecated', 'em is absolute'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What does <code>overflow: hidden</code> do?', options: ['Shows scrollbars always', 'Clips overflowing content', 'Expands container', 'Deletes content'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the BFC (Block Formatting Context)?', options: ['A browser API', 'Independent layout region for block boxes', 'A CSS framework', 'Binary Font Cache'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>will-change</code> hint to the browser?', options: ['Memory usage', 'Upcoming property changes for optimization', 'Color changes', 'Font changes'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is CSS containment used for?', options: ['Security', 'Isolating layout/paint for performance', 'Hiding elements', 'Media queries'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the <code>:is()</code> pseudo-class function?', options: ['Type checking', 'Selector list shorthand', 'Image selector', 'Import rule'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>clamp()</code> do in CSS?', options: ['Clamps elements together', 'Constrains value between min and max', 'Fixes position', 'Limits animations'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is subgrid in CSS Grid?', options: ['A smaller grid only', 'Nested grid inheriting parent tracks', 'Deprecated feature', 'JS grid library'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the <code>content-visibility</code> property for?', options: ['Hiding text', 'Skipping rendering of off-screen content', 'Content security', 'Visibility toggle only'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>aspect-ratio</code> control?', options: ['Image quality', 'Width-to-height ratio', 'Pixel density', 'Font ratio'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a stacking context?', options: ['JS call stack', 'Layered group for z-index', 'DOM tree', 'CSS cascade'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the purpose of <code>@layer</code> in CSS?', options: ['Image layers', 'Explicit cascade layer ordering', 'Z-index layers only', 'Animation layers'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>prefers-reduced-motion</code> detect?', options: ['Slow network', 'User motion sensitivity preference', 'Low battery', 'Dark mode'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is FOUC?', options: ['Flash of Unstyled Content', 'Font of Unified Characters', 'Frame Output Unit Cache', 'First Object Unload Cycle'], answer: 0 },
+        { difficulty: 'advanced', q: 'What is the difference between <code>visibility: hidden</code> and <code>display: none</code>?', options: ['Same effect', 'hidden keeps space, none removes from layout', 'none keeps space', 'hidden removes from DOM'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>grid-template-areas</code> enable?', options: ['Named grid areas layout', 'Area calculations only', 'Auto-fit columns', 'Flex fallback'], answer: 0 },
+        { difficulty: 'advanced', q: 'What is <code>min()</code> in CSS functions?', options: ['Minimum font size only', 'Picks smallest of comma-separated values', 'Sets min-width only', 'Media query helper'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is progressive enhancement?', options: ['Adding more JS always', 'Base experience first, enhanced features layered', 'CSS preprocessors', 'Lazy loading only'], answer: 1 },
+        { difficulty: 'advanced', q: 'What does <code>:focus-visible</code> target?', options: ['All focus events', 'Keyboard-focus visible indicators', 'Mouse hover focus', 'Tab index only'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the CSS cascade order (simplified)?', options: ['Importance → Specificity → Source order', 'Source order only', 'Alphabetical', 'File size'], answer: 0 },
+        { difficulty: 'beginner', q: 'Which tag creates a paragraph?', options: ['<para>', '<p>', '<paragraph>', '<text>'], answer: 1 },
+        { difficulty: 'beginner', q: 'Which property makes text bold?', options: ['font-weight', 'text-bold', 'bold', 'font-style'], answer: 0 },
+        { difficulty: 'intermediate', q: 'What does <code>justify-content</code> control in flexbox?', options: ['Cross-axis alignment', 'Main-axis alignment', 'Flex wrap', 'Item order'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is <code>logical properties</code> in CSS?', options: ['Boolean CSS', 'Direction-aware properties (inline/block)', 'Math functions', 'Selector logic'], answer: 1 },
+      ],
+      general: [
+        { difficulty: 'beginner', q: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Personal Unit', 'Central Program Utility', 'Core Processing Utility'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is RAM used for?', options: ['Permanent storage', 'Temporary fast memory', 'Graphics only', 'Network routing'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is an algorithm?', options: ['A programming language', 'Step-by-step problem-solving procedure', 'A hardware component', 'A database'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does HTTP stand for?', options: ['HyperText Transfer Protocol', 'High Transfer Text Process', 'Hyperlink Text Transport', 'Host Transfer Protocol'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is a binary number system base?', options: ['8', '10', '2', '16'], answer: 2 },
+        { difficulty: 'beginner', q: 'What is a bug in software?', options: ['A feature', 'An error or defect', 'A virus always', 'A comment'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does IDE stand for?', options: ['Integrated Development Environment', 'Internal Data Engine', 'Interactive Design Editor', 'Internet Dev Extension'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is open source software?', options: ['Free hardware', 'Publicly accessible source code', 'Cloud-only software', 'Paid enterprise only'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is a variable in programming?', options: ['A fixed constant', 'Named storage for data', 'A function type', 'A loop counter only'], answer: 1 },
+        { difficulty: 'beginner', q: 'What does URL stand for?', options: ['Uniform Resource Locator', 'Universal Reference Link', 'Unified Routing Language', 'User Resource Library'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is a loop used for?', options: ['Storing files', 'Repeating code execution', 'Network requests', 'Memory allocation'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is Git primarily used for?', options: ['Image editing', 'Version control', 'Web hosting', 'Compiling code'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is an API?', options: ['Application Programming Interface', 'Automated Program Integration', 'Advanced Protocol Internet', 'Application Process Index'], answer: 0 },
+        { difficulty: 'beginner', q: 'What does GUI stand for?', options: ['Graphical User Interface', 'General Utility Interface', 'Global User Integration', 'Graphic Unified Input'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is a compiler?', options: ['Translates source to machine code', 'Runs code line by line only', 'A text editor', 'A debugger'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is an integer data type?', options: ['Decimal number', 'Whole number', 'Text string', 'Boolean'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is cloud computing?', options: ['Weather-based computing', 'On-demand computing over the internet', 'Local-only storage', 'Offline processing'], answer: 1 },
+        { difficulty: 'beginner', q: 'What is a conditional statement?', options: ['Always runs once', 'Executes code based on a condition', 'A type of loop', 'An import statement'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is Big O notation used for?', options: ['Large numbers', 'Algorithm complexity analysis', 'Binary operations', 'Object orientation'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a hash table?', options: ['A sorted array', 'Key-value store with hash function', 'A tree structure', 'A queue'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is recursion?', options: ['A loop type', 'Function calling itself', 'Memory recycling', 'Parallel processing'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is TCP vs UDP difference (main)?', options: ['No difference', 'TCP is connection-oriented and reliable', 'UDP is always encrypted', 'TCP is faster always'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a stack data structure?', options: ['FIFO', 'LIFO', 'Random access', 'Sorted list'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a queue data structure?', options: ['LIFO', 'FIFO', 'Tree traversal', 'Hash map'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is polymorphism in OOP?', options: ['Many shapes/forms of behavior', 'Single inheritance only', 'Memory polymorph', 'File polymorphism'], answer: 0 },
+        { difficulty: 'intermediate', q: 'What is encapsulation?', options: ['Wrapping data and methods together', 'Copying objects', 'Network encapsulation only', 'Loop encapsulation'], answer: 0 },
+        { difficulty: 'intermediate', q: 'What is a linked list?', options: ['Array with indexes', 'Nodes connected by pointers', 'Hash table variant', 'Binary tree'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is dead code elimination?', options: ['Removing unused code', 'Killing processes', 'Deleting databases', 'Stopping loops'], answer: 0 },
+        { difficulty: 'intermediate', q: 'What is a binary search requirement?', options: ['Unsorted array', 'Sorted array', 'Linked list', 'Hash table'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is DNS responsible for?', options: ['Email sending', 'Domain name to IP resolution', 'File storage', 'Encryption'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a mutex used for?', options: ['Memory allocation', 'Mutual exclusion in concurrency', 'Network mutex', 'File locking only on Windows'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is abstraction in OOP?', options: ['Hiding complexity, showing essentials', 'Deleting code', 'Abstract art in UI', 'Memory abstraction only'], answer: 0 },
+        { difficulty: 'intermediate', q: 'What is the time complexity of binary search?', options: ['O(n)', 'O(log n)', 'O(n²)', 'O(1)'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a REST API?', options: ['Real-time socket protocol', 'Architectural style using HTTP methods', 'Remote execution system', 'Relational database API'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is a deadlock?', options: ['Process termination', 'Circular wait blocking processes', 'Memory overflow', 'Network timeout'], answer: 1 },
+        { difficulty: 'intermediate', q: 'What is caching used for?', options: ['Slowing requests', 'Storing frequently accessed data for speed', 'Encrypting data', 'Deleting old data'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is CAP theorem about?', options: ['Capitalization in code', 'Consistency, Availability, Partition tolerance tradeoffs', 'Cache, API, Protocol', 'Compile, Assemble, Package'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is dynamic programming?', options: ['Runtime typing', 'Breaking problems into overlapping subproblems with memoization', 'Dynamic HTML', 'Live coding'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a bloom filter?', options: ['Image filter', 'Probabilistic set membership structure', 'SQL filter', 'CSS filter'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is eventual consistency?', options: ['Immediate consistency always', 'Replicas converge over time', 'No consistency', 'Single-node consistency'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a trie data structure used for?', options: ['Sorting numbers', 'Prefix-based string storage/search', 'Graph cycles', 'Matrix math'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the halting problem?', options: ['Program crash', 'Undecidable whether program halts', 'Infinite loop fix', 'CPU halt instruction'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is sharding in databases?', options: ['Deleting shards', 'Horizontal partitioning of data', 'Vertical scaling', 'Backup splitting'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a red-black tree property?', options: ['All nodes red', 'Self-balancing BST with color invariants', 'Unbalanced tree', 'Hash tree'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is memoization vs tabulation?', options: ['Same technique', 'Top-down vs bottom-up DP approaches', 'Both bottom-up', 'Neither uses cache'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is Byzantine fault tolerance?', options: ['Ancient algorithms', 'Consensus despite malicious/faulty nodes', 'Backup tolerance', 'UI fault handling'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is Amdahl\'s Law about?', options: ['Memory limits', 'Speedup limits from parallelization', 'Network bandwidth', 'Cache size'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a semaphore vs mutex?', options: ['Identical', 'Semaphore allows multiple, mutex one', 'Mutex allows many', 'Semaphore is for files only'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is normalization in databases?', options: ['Making data normal', 'Organizing data to reduce redundancy', 'Denormalizing for speed', 'Encrypting tables'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is Dijkstra\'s algorithm for?', options: ['Sorting', 'Shortest path in weighted graph', 'Hashing', 'Compression'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is cache coherence?', options: ['Cache color', 'Consistency of shared data in CPU caches', 'Cache size agreement', 'Network cache'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is a context switch cost mainly from?', options: ['Disk IO', 'Saving/restoring CPU state and cache invalidation', 'Network latency', 'User input'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the difference between process and thread?', options: ['Same thing', 'Process has own memory space, threads share', 'Thread has own memory always', 'Process is lighter'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is ACID in databases?', options: ['Atomicity, Consistency, Isolation, Durability', 'Access, Cache, Index, Data', 'Automatic, Concurrent, Integrated, Distributed', 'API, Client, Interface, Data'], answer: 0 },
+        { difficulty: 'beginner', q: 'What is a function in programming?', options: ['A reusable block of code', 'A variable type', 'A file format', 'An error handler only'], answer: 0 },
+        { difficulty: 'beginner', q: 'What does SSD stand for?', options: ['Solid State Drive', 'Super Speed Disk', 'System Storage Device', 'Serial Storage Drive'], answer: 0 },
+        { difficulty: 'intermediate', q: 'What is a binary tree?', options: ['Tree with two roots', 'Tree where each node has at most two children', 'Sorted array', 'Graph with cycles'], answer: 1 },
+        { difficulty: 'advanced', q: 'What is the traveling salesman problem class?', options: ['P problem', 'NP-hard optimization problem', 'O(1) problem', 'Sorting problem'], answer: 1 },
+      ],
+    };
+
+    const LANG_LABELS = {
+      javascript: 'JavaScript',
+      python: 'Python',
+      htmlcss: 'HTML/CSS',
+      general: 'General CS',
+    };
+
+    const DIFF_LABELS = {
+      beginner: 'Beginner',
+      intermediate: 'Intermediate',
+      advanced: 'Advanced',
+    };
+
+    const QUESTIONS_PER_QUIZ = 10;
+    const TIME_PER_QUESTION = 20;
+    const CIRCUMFERENCE = 2 * Math.PI * 22;
+
+    // ─── State ───
+    let selectedLang = null;
+    let selectedDiff = null;
+    let quizQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval = null;
+    let timeLeft = TIME_PER_QUESTION;
+    let quizStartTime = 0;
+    let answered = false;
+    let audioCtx = null;
+
+    // ─── DOM ───
+    const screens = {
+      home: document.getElementById('screen-home'),
+      setup: document.getElementById('screen-setup'),
+      quiz: document.getElementById('screen-quiz'),
+      results: document.getElementById('screen-results'),
+    };
+
+    const els = {
+      btnStart: document.getElementById('btn-start'),
+      btnBegin: document.getElementById('btn-begin'),
+      btnBackHome: document.getElementById('btn-back-home'),
+      btnRetry: document.getElementById('btn-retry'),
+      btnShare: document.getElementById('btn-share'),
+      btnHome: document.getElementById('btn-home'),
+      langOptions: document.getElementById('lang-options'),
+      diffOptions: document.getElementById('diff-options'),
+      quizMeta: document.getElementById('quiz-meta'),
+      timerCircle: document.getElementById('timer-circle'),
+      timerText: document.getElementById('timer-text'),
+      progressLabel: document.getElementById('progress-label'),
+      progressFill: document.getElementById('progress-fill'),
+      questionCard: document.getElementById('question-card'),
+      questionText: document.getElementById('question-text'),
+      answers: document.getElementById('answers'),
+      feedback: document.getElementById('feedback'),
+      finalScore: document.getElementById('final-score'),
+      perfMessage: document.getElementById('perf-message'),
+      timeTaken: document.getElementById('time-taken'),
+      toast: document.getElementById('toast'),
+    };
+
+    // ─── Audio (Web Audio API) ───
+    function getAudioCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    function playTone(freqs, durations, type = 'sine', volume = 0.15) {
+      const ctx = getAudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+      let time = ctx.currentTime;
+      freqs.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, time);
+        gain.gain.setValueAtTime(volume, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + durations[i]);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(time);
+        osc.stop(time + durations[i]);
+        time += durations[i] * 0.85;
+      });
+    }
+
+    function playCorrectSound() {
+      playTone([523, 659, 784], [0.12, 0.12, 0.2]);
+    }
+
+    function playWrongSound() {
+      playTone([300, 200], [0.15, 0.25], 'sawtooth', 0.1);
+    }
+
+    // ─── Navigation ───
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      screens[name].classList.add('active');
+    }
+
+    // ─── Setup ───
+    function setupOptionButtons(container, dataAttr, callback) {
+      container.querySelectorAll('.option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          callback(btn.dataset[dataAttr]);
+          els.btnBegin.disabled = !(selectedLang && selectedDiff);
+        });
+      });
+    }
+
+    setupOptionButtons(els.langOptions, 'lang', val => { selectedLang = val; });
+    setupOptionButtons(els.diffOptions, 'diff', val => { selectedDiff = val; });
+
+    // ─── Quiz Logic ───
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function pickQuestions(lang, diff) {
+      const pool = QUESTION_BANK[lang].filter(q => q.difficulty === diff);
+      const shuffled = shuffle(pool);
+      if (shuffled.length >= QUESTIONS_PER_QUIZ) return shuffled.slice(0, QUESTIONS_PER_QUIZ);
+      const extras = shuffle(QUESTION_BANK[lang].filter(q => q.difficulty !== diff));
+      return [...shuffled, ...extras].slice(0, QUESTIONS_PER_QUIZ);
+    }
+
+    function startQuiz() {
+      quizQuestions = pickQuestions(selectedLang, selectedDiff);
+      currentIndex = 0;
+      score = 0;
+      quizStartTime = Date.now();
+      els.quizMeta.textContent = `${LANG_LABELS[selectedLang]} · ${DIFF_LABELS[selectedDiff]}`;
+      showScreen('quiz');
+      renderQuestion(false);
+    }
+
+    function updateTimerVisual() {
+      const pct = timeLeft / TIME_PER_QUESTION;
+      const offset = CIRCUMFERENCE * (1 - pct);
+      els.timerCircle.style.strokeDashoffset = offset;
+      els.timerText.textContent = timeLeft;
+      els.timerCircle.classList.remove('warning', 'danger');
+      if (timeLeft <= 5) els.timerCircle.classList.add('danger');
+      else if (timeLeft <= 10) els.timerCircle.classList.add('warning');
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      timeLeft = TIME_PER_QUESTION;
+      updateTimerVisual();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerVisual();
+        if (timeLeft <= 0) {
+          stopTimer();
+          handleTimeout();
+        }
+      }, 1000);
+    }
+
+    function renderQuestion(animate) {
+      answered = false;
+      const q = quizQuestions[currentIndex];
+      els.progressLabel.textContent = `${currentIndex + 1} / ${QUESTIONS_PER_QUIZ}`;
+      els.progressFill.style.width = `${((currentIndex + 1) / QUESTIONS_PER_QUIZ) * 100}%`;
+      els.feedback.style.display = 'none';
+      els.questionText.innerHTML = q.q;
+
+      els.answers.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => selectAnswer(i));
+        els.answers.appendChild(btn);
+      });
+
+      if (animate) {
+        els.questionCard.classList.remove('animating-out');
+        els.questionCard.classList.add('animating-in');
+        setTimeout(() => els.questionCard.classList.remove('animating-in'), 350);
+      }
+
+      startTimer();
+    }
+
+    function showFeedback(isCorrect, timedOut) {
+      const q = quizQuestions[currentIndex];
+      els.feedback.style.display = 'block';
+      if (timedOut) {
+        els.feedback.className = 'feedback timeout-fb';
+        els.feedback.textContent = `Time's up! Correct answer: ${q.options[q.answer]}`;
+      } else if (isCorrect) {
+        els.feedback.className = 'feedback correct-fb';
+        els.feedback.textContent = 'Correct! Nice work.';
+      } else {
+        els.feedback.className = 'feedback wrong-fb';
+        els.feedback.textContent = `Wrong! Correct answer: ${q.options[q.answer]}`;
+      }
+    }
+
+    function highlightAnswers(selectedIdx, timedOut) {
+      const q = quizQuestions[currentIndex];
+      const buttons = els.answers.querySelectorAll('.answer-btn');
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === q.answer) btn.classList.add('reveal-correct', 'correct');
+        else if (i === selectedIdx && !timedOut) btn.classList.add('wrong');
+      });
+    }
+
+    function selectAnswer(idx) {
+      if (answered) return;
+      answered = true;
+      stopTimer();
+      const q = quizQuestions[currentIndex];
+      const isCorrect = idx === q.answer;
+      if (isCorrect) {
+        score++;
+        playCorrectSound();
+      } else {
+        playWrongSound();
+      }
+      highlightAnswers(idx, false);
+      showFeedback(isCorrect, false);
+      setTimeout(nextQuestion, 1800);
+    }
+
+    function handleTimeout() {
+      if (answered) return;
+      answered = true;
+      playWrongSound();
+      highlightAnswers(-1, true);
+      showFeedback(false, true);
+      setTimeout(nextQuestion, 2000);
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex >= QUESTIONS_PER_QUIZ) {
+        showResults();
+        return;
+      }
+      els.questionCard.classList.add('animating-out');
+      setTimeout(() => {
+        renderQuestion(true);
+        els.questionCard.classList.remove('animating-out');
+      }, 250);
+    }
+
+    function formatTime(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const min = Math.floor(totalSec / 60);
+      const sec = totalSec % 60;
+      if (min > 0) return `${min}m ${sec}s`;
+      return `${sec}s`;
+    }
+
+    function getPerfMessage(s) {
+      if (s === 10) return 'Perfect score! You\'re a legend!';
+      if (s >= 8) return 'Excellent! You really know your stuff.';
+      if (s >= 6) return 'Good job! Keep practicing to level up.';
+      if (s >= 4) return 'Not bad! Review the topics and try again.';
+      return 'Keep learning — every expert was once a beginner.';
+    }
+
+    function showResults() {
+      stopTimer();
+      const elapsed = Date.now() - quizStartTime;
+      els.finalScore.textContent = `${score}/${QUESTIONS_PER_QUIZ}`;
+      els.perfMessage.textContent = getPerfMessage(score);
+      els.timeTaken.textContent = `Time taken: ${formatTime(elapsed)}`;
+      showScreen('results');
+    }
+
+    function getShareText() {
+      return `I scored ${score}/${QUESTIONS_PER_QUIZ} on DevQuiz ${LANG_LABELS[selectedLang]} — ${DIFF_LABELS[selectedDiff]}! Can you beat me?`;
+    }
+
+    function showToast(msg) {
+      els.toast.textContent = msg;
+      els.toast.classList.add('show');
+      setTimeout(() => els.toast.classList.remove('show'), 2500);
+    }
+
+    async function shareScore() {
+      const text = getShareText();
+      if (navigator.share) {
+        try {
+          await navigator.share({ text });
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Score copied to clipboard!');
+      } catch {
+        showToast(text);
+      }
+    }
+
+    function resetSetup() {
+      selectedLang = null;
+      selectedDiff = null;
+      els.langOptions.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+      els.diffOptions.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+      els.btnBegin.disabled = true;
+    }
+
+    // ─── Event Listeners ───
+    els.btnStart.addEventListener('click', () => { resetSetup(); showScreen('setup'); });
+    els.btnBackHome.addEventListener('click', () => showScreen('home'));
+    els.btnBegin.addEventListener('click', startQuiz);
+    els.btnRetry.addEventListener('click', startQuiz);
+    els.btnShare.addEventListener('click', shareScore);
+    els.btnHome.addEventListener('click', () => { resetSetup(); showScreen('home'); });
+
+    els.timerCircle.style.strokeDasharray = CIRCUMFERENCE;
+  </script>
+</body>
+</html>
